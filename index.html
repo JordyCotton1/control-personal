@@ -147,7 +147,48 @@ button, input, textarea {
 <script>
 let usuario = "";
 let rol = "";
-let intervalo;
+
+/* ========= LOGIN ========= */
+function mostrar(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function loginPersonal() {
+    let n = nombre.value;
+    let a = apellido.value;
+    if (!n || !a) return alert("Completa datos");
+
+    usuario = n + " " + a;
+    rol = "personal";
+    iniciar();
+}
+
+function loginGerente() {
+    if (clave.value !== "12345678") return alert("Clave incorrecta");
+
+    usuario = "Gerente";
+    rol = "gerente";
+    iniciar();
+}
+
+function iniciar() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    app.style.display = "block";
+
+    titulo.innerText = "👤 " + usuario;
+
+    if (rol === "gerente") {
+        acciones.style.display = "none";
+        btnBorrar.style.display = "block";
+        registro.style.display = "block";
+    } else {
+        registro.style.display = "none";
+        btnBorrar.style.display = "none";
+    }
+}
+
+/* ========= FIREBASE ========= */
 </script>
 
 <script type="module">
@@ -174,47 +215,7 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* ================= LOGIN ================= */
-window.mostrar = function(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-window.loginPersonal = function() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
-
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-window.loginGerente = function() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
-
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block";
-        registro.style.display = "block";
-    } else {
-        registro.style.display = "none";
-        btnBorrar.style.display = "none";
-    }
-}
-
-/* ================= GUARDAR ================= */
+/* ========= GUARDAR GLOBAL ========= */
 window.guardar = function(texto) {
     push(cloudRef, {
         usuario,
@@ -235,7 +236,7 @@ window.enviarMensaje = function() {
     mensaje.value = "";
 };
 
-/* ================= GERENTE VE TODO ================= */
+/* ========= GERENTE VE TODO (NUEVO ARRIBA) ========= */
 onValue(cloudRef, (snap) => {
     if (rol !== "gerente") return;
 
@@ -245,7 +246,7 @@ onValue(cloudRef, (snap) => {
         data.push(item.val());
     });
 
-    // 🔥 NUEVO ARRIBA
+    // 🔥 más nuevo primero
     data.reverse();
 
     registro.innerHTML = "";
@@ -260,14 +261,14 @@ onValue(cloudRef, (snap) => {
     });
 });
 
-/* ================= BORRAR ================= */
+/* ========= BORRAR GLOBAL ========= */
 window.borrarHistorial = function() {
     if (confirm("¿Borrar historial global?")) {
         remove(cloudRef);
     }
 };
 
-/* ================= CERRAR ================= */
+/* ========= CERRAR ========= */
 window.cerrarSesion = function() {
     location.reload();
 };
