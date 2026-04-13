@@ -90,6 +90,7 @@ button, input, textarea {
 
 <body>
 
+<!-- INICIO -->
 <div class="screen active" id="inicio">
     <div class="box">
         <h2>Ingresar como:</h2>
@@ -98,6 +99,7 @@ button, input, textarea {
     </div>
 </div>
 
+<!-- PERSONAL -->
 <div class="screen" id="personalLogin">
     <div class="box">
         <input id="nombre" placeholder="Nombre">
@@ -106,6 +108,7 @@ button, input, textarea {
     </div>
 </div>
 
+<!-- GERENTE -->
 <div class="screen" id="gerenteLogin">
     <div class="box">
         <input id="clave" type="password" placeholder="Clave">
@@ -113,6 +116,7 @@ button, input, textarea {
     </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="app">
     <div class="box">
         <h3 id="titulo"></h3>
@@ -129,7 +133,7 @@ button, input, textarea {
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
-        <!-- SOLO GERENTE VE -->
+        <!-- SOLO GERENTE VE TODO -->
         <div class="log" id="registro" style="display:none;"></div>
 
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
@@ -143,45 +147,7 @@ button, input, textarea {
 <script>
 let usuario = "";
 let rol = "";
-
-function mostrar(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-function loginPersonal() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
-
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-function loginGerente() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
-
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block";
-        registro.style.display = "block";
-    } else {
-        btnBorrar.style.display = "none";
-        registro.style.display = "none";
-    }
-}
+let intervalo;
 </script>
 
 <script type="module">
@@ -208,7 +174,47 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* 🔥 GUARDAR */
+/* ================= LOGIN ================= */
+window.mostrar = function(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+window.loginPersonal = function() {
+    let n = nombre.value;
+    let a = apellido.value;
+    if (!n || !a) return alert("Completa datos");
+
+    usuario = n + " " + a;
+    rol = "personal";
+    iniciar();
+}
+
+window.loginGerente = function() {
+    if (clave.value !== "12345678") return alert("Clave incorrecta");
+
+    usuario = "Gerente";
+    rol = "gerente";
+    iniciar();
+}
+
+function iniciar() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    app.style.display = "block";
+
+    titulo.innerText = "👤 " + usuario;
+
+    if (rol === "gerente") {
+        acciones.style.display = "none";
+        btnBorrar.style.display = "block";
+        registro.style.display = "block";
+    } else {
+        registro.style.display = "none";
+        btnBorrar.style.display = "none";
+    }
+}
+
+/* ================= GUARDAR ================= */
 window.guardar = function(texto) {
     push(cloudRef, {
         usuario,
@@ -229,15 +235,22 @@ window.enviarMensaje = function() {
     mensaje.value = "";
 };
 
-/* 👔 SOLO GERENTE VE HISTORIAL */
+/* ================= GERENTE VE TODO ================= */
 onValue(cloudRef, (snap) => {
     if (rol !== "gerente") return;
 
-    registro.innerHTML = "";
+    let data = [];
 
     snap.forEach(item => {
-        let r = item.val();
+        data.push(item.val());
+    });
 
+    // 🔥 NUEVO ARRIBA
+    data.reverse();
+
+    registro.innerHTML = "";
+
+    data.forEach(r => {
         registro.innerHTML += `
         <div class="item">
             <span class="user">${r.usuario}</span><br>
@@ -247,11 +260,16 @@ onValue(cloudRef, (snap) => {
     });
 });
 
-/* 🗑️ BORRAR */
+/* ================= BORRAR ================= */
 window.borrarHistorial = function() {
     if (confirm("¿Borrar historial global?")) {
         remove(cloudRef);
     }
+};
+
+/* ================= CERRAR ================= */
+window.cerrarSesion = function() {
+    location.reload();
 };
 </script>
 
