@@ -226,6 +226,18 @@ window.guardar = function(texto) {
 
 window.registrar = function(t) {
     guardar(t);
+
+    // 👇 SOLO PERSONAL VE LO SUYO
+    if (rol === "personal") {
+        let html = `
+        <div class="item">
+            <span class="user">${usuario}</span><br>
+            ${t}
+            <div class="time">${new Date().toLocaleTimeString()}</div>
+        </div>`;
+
+        registro.innerHTML = html + registro.innerHTML;
+    }
 };
 
 window.enviarMensaje = function() {
