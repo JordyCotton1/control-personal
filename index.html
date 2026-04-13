@@ -2,43 +2,30 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Personal PRO</title>
 
 <style>
-:root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --accent: #3b82f6;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --text: #e2e8f0;
-}
-
 body {
     margin: 0;
     font-family: Arial;
-    background: var(--bg);
-    color: var(--text);
+    background: #0f172a;
+    color: white;
 }
 
-.screen {
-    display: none;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 10px;
 }
-.active { display: flex; }
 
 .box {
-    background: var(--card);
-    padding: 25px;
+    background: #1e293b;
+    padding: 15px;
     border-radius: 15px;
-    width: 300px;
-    text-align: center;
 }
 
-button, input, textarea {
+input, button, textarea {
     width: 100%;
     padding: 10px;
     margin: 6px 0;
@@ -46,16 +33,11 @@ button, input, textarea {
     border: none;
 }
 
-.primary { background: var(--accent); color:white; }
-.success { background: var(--success); color:white; }
-.warning { background: var(--warning); color:white; }
-.danger { background: var(--danger); color:white; }
+button { cursor: pointer; }
 
-.app {
-    display: none;
-    max-width: 420px;
-    margin: 30px auto;
-}
+.primary { background: #3b82f6; color: white; }
+.success { background: #22c55e; color: white; }
+.danger { background: #ef4444; color: white; }
 
 .grid {
     display: grid;
@@ -64,213 +46,166 @@ button, input, textarea {
 }
 
 .log {
-    margin-top: 15px;
-    max-height: 300px;
+    margin-top: 10px;
+    max-height: 350px;
     overflow-y: auto;
 }
 
 .item {
     background: #0f172a;
     padding: 10px;
-    border-radius: 10px;
     margin: 5px 0;
+    border-radius: 10px;
 }
 
-.user {
-    color: #38bdf8;
-    font-weight: bold;
-}
+.user { color: #38bdf8; font-weight: bold; }
+.time { font-size: 11px; color: #94a3b8; }
 
-.time {
-    font-size: 11px;
-    color: #94a3b8;
+@media (max-width:600px){
+    .grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- INICIO -->
-<div class="screen active" id="inicio">
-    <div class="box">
-        <h2>Ingresar como:</h2>
-        <button class="primary" onclick="mostrar('personalLogin')">👷 Personal</button>
-        <button class="success" onclick="mostrar('gerenteLogin')">👔 Gerente</button>
-    </div>
+<div class="container">
+<div class="box">
+
+<h2>Control de Personal</h2>
+
+<input id="nombre" placeholder="Nombre">
+<input id="apellido" placeholder="Apellido">
+<button class="primary" onclick="loginPersonal()">Entrar Personal</button>
+
+<input id="clave" type="password" placeholder="Clave gerente">
+<button class="success" onclick="loginGerente()">Entrar Gerente</button>
+
+<hr>
+
+<div id="panel" style="display:none">
+
+<h3 id="usuario"></h3>
+
+<div id="acciones">
+<div class="grid">
+<button onclick="registrar('🍳 Desayuno')">Desayuno</button>
+<button onclick="registrar('🥪 Refacción')">Refacción</button>
+<button onclick="registrar('🍽️ Almuerzo')">Almuerzo</button>
+<button onclick="registrar('🚪 Salida')">Salida</button>
 </div>
 
-<!-- PERSONAL -->
-<div class="screen" id="personalLogin">
-    <div class="box">
-        <input id="nombre" placeholder="Nombre">
-        <input id="apellido" placeholder="Apellido">
-        <button class="primary" onclick="loginPersonal()">Entrar</button>
-    </div>
+<textarea id="mensaje" placeholder="Mensaje..."></textarea>
+<button class="primary" onclick="enviar()">Enviar</button>
 </div>
 
-<!-- GERENTE -->
-<div class="screen" id="gerenteLogin">
-    <div class="box">
-        <input id="clave" type="password" placeholder="Clave">
-        <button class="success" onclick="loginGerente()">Entrar</button>
-    </div>
+<div class="log" id="log"></div>
+
+<button class="danger" onclick="borrar()">🗑️ Borrar historial</button>
+<button class="danger" onclick="cerrar()">Cerrar sesión</button>
+
 </div>
 
-<!-- APP -->
-<div class="app" id="app">
-    <div class="box">
-        <h3 id="titulo"></h3>
-
-        <!-- PERSONAL -->
-        <div id="acciones">
-            <div class="grid">
-                <button class="warning" onclick="registrar('🍳 Desayuno')">Desayuno</button>
-                <button class="success" onclick="registrar('🥪 Refacción')">Refacción</button>
-                <button class="primary" onclick="registrar('🍽️ Almuerzo')">Almuerzo</button>
-                <button class="danger" onclick="registrar('🚪 Salida')">Salida</button>
-            </div>
-
-            <textarea id="mensaje" placeholder="Ej: Voy al baño..."></textarea>
-            <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
-        </div>
-
-        <!-- HISTORIAL -->
-        <div class="log" id="registro"></div>
-
-        <!-- BOTÓN BORRAR SOLO GERENTE -->
-        <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
-            🗑️ Borrar historial
-        </button>
-
-        <button class="danger" onclick="cerrarSesion()">Cerrar sesión</button>
-    </div>
+</div>
 </div>
 
-<script>
-let usuario = "";
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+getDatabase,
+ref,
+push,
+onValue,
+remove
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+/* 🔥 TU CONFIG FIREBASE (REEMPLAZA ESTO) */
+const firebaseConfig = {
+apiKey: "TU_API_KEY",
+authDomain: "TU_PROYECTO.firebaseapp.com",
+databaseURL: "https://TU_PROYECTO.firebaseio.com",
+projectId: "TU_PROYECTO"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const refDB = ref(db, "registros");
+
+let user = "";
 let rol = "";
-let intervalo;
 
-// CAMBIAR PANTALLA
-function mostrar(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
+/* LOGIN PERSONAL */
+window.loginPersonal = function () {
+user = nombre.value + " " + apellido.value;
+rol = "personal";
+iniciar();
+};
 
-// LOGIN PERSONAL
-function loginPersonal() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
+/* LOGIN GERENTE */
+window.loginGerente = function () {
+if (clave.value !== "1234") return alert("Clave incorrecta");
+user = "Gerente";
+rol = "gerente";
+iniciar();
+};
 
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-// LOGIN GERENTE
-function loginGerente() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-// INICIAR
+/* INICIAR */
 function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
+panel.style.display = "block";
+usuario.innerText = user;
 
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block"; // 👈 mostrar botón
-        mostrarRegistros();
-        intervalo = setInterval(mostrarRegistros, 2000);
-    } else {
-        btnBorrar.style.display = "none";
-        mostrarSesion();
-    }
+if (rol === "gerente") {
+acciones.style.display = "none";
 }
 
-// GUARDAR
-function guardar(texto) {
-    let hora = new Date().toLocaleTimeString();
-
-    let registros = JSON.parse(localStorage.getItem("registros")) || [];
-    registros.unshift({ usuario, texto, hora });
-    localStorage.setItem("registros", JSON.stringify(registros));
-
-    let sesion = JSON.parse(sessionStorage.getItem("sesion")) || [];
-    sesion.unshift({ texto, hora });
-    sessionStorage.setItem("sesion", JSON.stringify(sesion));
+onValue(refDB, (snap) => {
+log.innerHTML = "";
+snap.forEach(item => {
+let d = item.val();
+log.innerHTML = `
+<div class="item">
+<span class="user">${d.user}</span><br>
+${d.text}
+<div class="time">${d.time}</div>
+</div>
+` + log.innerHTML;
+});
+});
 }
 
-// MOSTRAR GERENTE
-function mostrarRegistros() {
-    let registros = JSON.parse(localStorage.getItem("registros")) || [];
-    registro.innerHTML = "";
+/* GUARDAR */
+window.registrar = function (t) {
+push(refDB, {
+user,
+text: t,
+time: new Date().toLocaleTimeString()
+});
+};
 
-    registros.forEach(r => {
-        registro.innerHTML += `
-        <div class="item">
-            <span class="user">${r.usuario}</span><br>
-            ${r.texto}
-            <div class="time">${r.hora}</div>
-        </div>`;
-    });
+window.enviar = function () {
+if (!mensaje.value) return alert("Escribe algo");
+
+push(refDB, {
+user,
+text: "💬 " + mensaje.value,
+time: new Date().toLocaleTimeString()
+});
+
+mensaje.value = "";
+};
+
+/* BORRAR HISTORIAL */
+window.borrar = function () {
+if (confirm("¿Borrar todo el historial?")) {
+remove(refDB);
 }
+};
 
-// MOSTRAR PERSONAL
-function mostrarSesion() {
-    let sesion = JSON.parse(sessionStorage.getItem("sesion")) || [];
-    registro.innerHTML = "";
-
-    sesion.forEach(r => {
-        registro.innerHTML += `
-        <div class="item">
-            ${r.texto}
-            <div class="time">${r.hora}</div>
-        </div>`;
-    });
-}
-
-// ACCIONES
-function registrar(t) {
-    guardar(t);
-    if (rol === "personal") mostrarSesion();
-}
-
-function enviarMensaje() {
-    let m = mensaje.value;
-    if (!m) return alert("Escribe algo");
-
-    guardar("💬 " + m);
-    mensaje.value = "";
-
-    if (rol === "personal") mostrarSesion();
-}
-
-// 🗑️ BORRAR HISTORIAL
-function borrarHistorial() {
-    if (!confirm("¿Seguro que quieres borrar todo el historial?")) return;
-
-    localStorage.removeItem("registros");
-    mostrarRegistros();
-}
-
-// CERRAR SESIÓN
-function cerrarSesion() {
-    clearInterval(intervalo);
-
-    if (rol === "personal") {
-        sessionStorage.clear();
-    }
-
-    location.reload();
-}
+/* CERRAR */
+window.cerrar = function () {
+location.reload();
+};
 </script>
 
 </body>
