@@ -86,10 +86,9 @@ button, input, textarea {
     font-size: 11px;
     color: #94a3b8;
 }
-
-
 </style>
 </head>
+
 <script>
 function detectarDispositivo() {
     const w = window.innerWidth;
@@ -108,16 +107,13 @@ function detectarDispositivo() {
 window.addEventListener("load", detectarDispositivo);
 window.addEventListener("resize", detectarDispositivo);
 </script>
+
 <body>
 
 <!-- INICIO -->
 <div class="screen active" id="inicio">
     <div class="box">
-
-        <!-- LOGO -->
         <img src="MUNI_LOGO2.png" style="width:120px; margin-bottom:10px;">
-
-        <!-- TÍTULO -->
         <h2>Dependencia de monitores</h2>
         <h4>LIC. JAQUELINE</h4>
 
@@ -164,7 +160,6 @@ window.addEventListener("resize", detectarDispositivo);
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
-        <!-- SOLO GERENTE VE TODO -->
         <div class="log" id="registro" style="display:none;"></div>
         <div class="log" id="registroPersonal"></div>
 
@@ -180,6 +175,18 @@ window.addEventListener("resize", detectarDispositivo);
 let usuario = "";
 let rol = "";
 
+/* ========= RESTAURAR SESIÓN ========= */
+window.addEventListener("load", () => {
+    const savedRol = localStorage.getItem("rol");
+    const savedUser = localStorage.getItem("usuario");
+
+    if (savedRol && savedUser) {
+        rol = savedRol;
+        usuario = savedUser;
+        iniciar();
+    }
+});
+
 /* ========= LOGIN ========= */
 function mostrar(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -193,6 +200,10 @@ function loginPersonal() {
 
     usuario = n + " " + a;
     rol = "personal";
+
+    localStorage.setItem("rol", rol);
+    localStorage.setItem("usuario", usuario);
+
     iniciar();
 }
 
@@ -201,9 +212,14 @@ function loginGerente() {
 
     usuario = "Gerente";
     rol = "gerente";
+
+    localStorage.setItem("rol", rol);
+    localStorage.setItem("usuario", usuario);
+
     iniciar();
 }
-    function mostrarPersonal(texto) {
+
+function mostrarPersonal(texto) {
     let cont = document.getElementById("registroPersonal");
 
     let html = `
@@ -231,10 +247,9 @@ function iniciar() {
         btnBorrar.style.display = "none";
     }
 }
-
-/* ========= FIREBASE ========= */
 </script>
 
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -259,7 +274,7 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* ========= GUARDAR GLOBAL ========= */
+/* ========= GUARDAR ========= */
 window.guardar = function(texto) {
     push(cloudRef, {
         usuario,
@@ -271,7 +286,6 @@ window.guardar = function(texto) {
 window.registrar = function(t) {
     guardar(t);
 
-    // 👇 PERSONAL VE SOLO LO SUYO
     if (rol === "personal") {
         mostrarPersonal(t);
     }
@@ -285,9 +299,8 @@ window.enviarMensaje = function() {
     mensaje.value = "";
 };
 
-/* ========= GERENTE VE TODO (NUEVO ARRIBA) ========= */
+/* ========= HISTORIAL GERENTE (SIEMPRE ACTIVO) ========= */
 onValue(cloudRef, (snap) => {
-    if (rol !== "gerente") return;
 
     let data = [];
 
@@ -295,7 +308,6 @@ onValue(cloudRef, (snap) => {
         data.push(item.val());
     });
 
-    // 🔥 más nuevo primero
     data.reverse();
 
     registro.innerHTML = "";
@@ -310,15 +322,16 @@ onValue(cloudRef, (snap) => {
     });
 });
 
-/* ========= BORRAR GLOBAL ========= */
+/* ========= BORRAR ========= */
 window.borrarHistorial = function() {
     if (confirm("¿Borrar historial global?")) {
         remove(cloudRef);
     }
 };
 
-/* ========= CERRAR ========= */
+/* ========= SALIR ========= */
 window.cerrarSesion = function() {
+    localStorage.clear();
     location.reload();
 };
 </script>
