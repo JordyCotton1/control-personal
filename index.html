@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Control de Personal </title>
+<title>Control de Personal</title>
 
 <style>
 :root {
@@ -129,7 +129,7 @@ button, input, textarea {
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
-        <!-- 🔥 SOLO GERENTE VE ESTO -->
+        <!-- SOLO GERENTE VE -->
         <div class="log" id="registro" style="display:none;"></div>
 
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
@@ -143,6 +143,45 @@ button, input, textarea {
 <script>
 let usuario = "";
 let rol = "";
+
+function mostrar(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function loginPersonal() {
+    let n = nombre.value;
+    let a = apellido.value;
+    if (!n || !a) return alert("Completa datos");
+
+    usuario = n + " " + a;
+    rol = "personal";
+    iniciar();
+}
+
+function loginGerente() {
+    if (clave.value !== "12345678") return alert("Clave incorrecta");
+
+    usuario = "Gerente";
+    rol = "gerente";
+    iniciar();
+}
+
+function iniciar() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    app.style.display = "block";
+
+    titulo.innerText = "👤 " + usuario;
+
+    if (rol === "gerente") {
+        acciones.style.display = "none";
+        btnBorrar.style.display = "block";
+        registro.style.display = "block";
+    } else {
+        btnBorrar.style.display = "none";
+        registro.style.display = "none";
+    }
+}
 </script>
 
 <script type="module">
@@ -169,58 +208,18 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* ========= LOGIN GLOBAL ========= */
-window.mostrar = function(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-window.loginPersonal = function() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
-
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-window.loginGerente = function() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
-
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block";
-        document.getElementById("registro").style.display = "block";
-    } else {
-        document.getElementById("registro").style.display = "none";
-        btnBorrar.style.display = "none";
-    }
-}
-
-/* ========= GUARDAR ========= */
+/* 🔥 GUARDAR */
 window.guardar = function(texto) {
     push(cloudRef, {
         usuario,
         texto,
         hora: new Date().toLocaleTimeString()
     });
-}
+};
 
 window.registrar = function(t) {
     guardar(t);
-}
+};
 
 window.enviarMensaje = function() {
     let m = mensaje.value;
@@ -228,19 +227,17 @@ window.enviarMensaje = function() {
 
     guardar("💬 " + m);
     mensaje.value = "";
-}
+};
 
-/* ========= SOLO GERENTE VE HISTORIAL ========= */
+/* 👔 SOLO GERENTE VE HISTORIAL */
 onValue(cloudRef, (snap) => {
     if (rol !== "gerente") return;
 
-    let data = [];
-    snap.forEach(item => data.push(item.val()));
-    data.reverse();
-
     registro.innerHTML = "";
 
-    data.forEach(r => {
+    snap.forEach(item => {
+        let r = item.val();
+
         registro.innerHTML += `
         <div class="item">
             <span class="user">${r.usuario}</span><br>
@@ -250,16 +247,11 @@ onValue(cloudRef, (snap) => {
     });
 });
 
-/* ========= BORRAR ========= */
+/* 🗑️ BORRAR */
 window.borrarHistorial = function() {
     if (confirm("¿Borrar historial global?")) {
         remove(cloudRef);
     }
-};
-
-/* ========= CERRAR ========= */
-window.cerrarSesion = function() {
-    location.reload();
 };
 </script>
 
