@@ -135,6 +135,7 @@ button, input, textarea {
 
         <!-- SOLO GERENTE VE TODO -->
         <div class="log" id="registro" style="display:none;"></div>
+        <div class="log" id="registroPersonal"></div>
 
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
             🗑️ Borrar historial
@@ -170,6 +171,18 @@ function loginGerente() {
     usuario = "Gerente";
     rol = "gerente";
     iniciar();
+}
+    function mostrarPersonal(texto) {
+    let cont = document.getElementById("registroPersonal");
+
+    let html = `
+    <div class="item">
+        <span class="user">${usuario}</span><br>
+        ${texto}
+        <div class="time">${new Date().toLocaleTimeString()}</div>
+    </div>`;
+
+    cont.innerHTML = html + cont.innerHTML;
 }
 
 function iniciar() {
@@ -227,16 +240,9 @@ window.guardar = function(texto) {
 window.registrar = function(t) {
     guardar(t);
 
-    // 👇 SOLO PERSONAL VE LO SUYO
+    // 👇 PERSONAL VE SOLO LO SUYO
     if (rol === "personal") {
-        let html = `
-        <div class="item">
-            <span class="user">${usuario}</span><br>
-            ${t}
-            <div class="time">${new Date().toLocaleTimeString()}</div>
-        </div>`;
-
-        registro.innerHTML = html + registro.innerHTML;
+        mostrarPersonal(t);
     }
 };
 
