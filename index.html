@@ -181,39 +181,9 @@ function iniciar() {
     }
 }
 
-/* 🔥 AHORA TODO ES FIREBASE (SIN LOCAL STORAGE CONFLICTO) */
-function guardar(texto) {
-    push(cloudRef, {
-        usuario,
-        texto,
-        hora: new Date().toLocaleTimeString()
-    });
-}
-
-function registrar(t) {
-    guardar(t);
-}
-
-function enviarMensaje() {
-    let m = mensaje.value;
-    if (!m) return alert("Escribe algo");
-
-    guardar("💬 " + m);
-    mensaje.value = "";
-}
-
-function borrarHistorial() {
-    if (confirm("¿Borrar historial global?")) {
-        remove(cloudRef);
-    }
-}
-
-function cerrarSesion() {
-    location.reload();
-}
+/* ========= FIREBASE ========= */
 </script>
 
-<!-- 🔥 FIREBASE REAL CORREGIDO -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -238,14 +208,34 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* 🔁 GUARDAR GLOBAL */
-window.push = push;
-window.cloudRef = cloudRef;
-window.remove = remove;
+/* 🔥 GUARDAR */
+window.guardar = function(texto) {
+    push(cloudRef, {
+        usuario,
+        texto,
+        hora: new Date().toLocaleTimeString()
+    });
+};
 
-/* 👁️ VER EN TIEMPO REAL (TODOS DISPOSITIVOS) */
+window.registrar = function(t) {
+    guardar(t);
+};
+
+window.enviarMensaje = function() {
+    let m = mensaje.value;
+    if (!m) return alert("Escribe algo");
+
+    guardar("💬 " + m);
+    mensaje.value = "";
+};
+
+window.borrarHistorial = function() {
+    if (confirm("¿Borrar historial global?")) {
+        remove(cloudRef);
+    }
+};
+
 onValue(cloudRef, (snap) => {
-
     let data = [];
 
     snap.forEach(item => {
@@ -265,7 +255,6 @@ onValue(cloudRef, (snap) => {
         </div>`;
     });
 });
-
 </script>
 
 </body>
