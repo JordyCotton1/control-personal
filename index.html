@@ -223,6 +223,7 @@ function iniciar() {
     titulo.innerText = "👤 " + usuario;
 
     if (rol === "gerente") {
+        pintarGerente();
         acciones.style.display = "none";
         btnBorrar.style.display = "block";
         registro.style.display = "block";
@@ -285,29 +286,40 @@ window.enviarMensaje = function() {
     mensaje.value = "";
 };
 
-/* ========= GERENTE VE TODO (NUEVO ARRIBA) ========= */
-onValue(cloudRef, (snap) => {
-    if (rol !== "gerente") return;
+/* ========= 🔥 FIX: HISTORIAL GERENTE SIEMPRE DISPONIBLE ========= */
 
-    let data = [];
+let cacheRegistros = [];
 
-    snap.forEach(item => {
-        data.push(item.val());
-    });
+function pintarGerente() {
+    let cont = document.getElementById("registro");
 
-    // 🔥 más nuevo primero
-    data.reverse();
+    cont.innerHTML = "";
 
-    registro.innerHTML = "";
+    let data = [...cacheRegistros].reverse(); // más nuevo primero
 
     data.forEach(r => {
-        registro.innerHTML += `
+        cont.innerHTML += `
         <div class="item">
             <span class="user">${r.usuario}</span><br>
             ${r.texto}
             <div class="time">${r.hora}</div>
         </div>`;
     });
+}
+
+/* ========= GERENTE VE TODO ========= */
+onValue(cloudRef, (snap) => {
+
+    cacheRegistros = [];
+
+    snap.forEach(item => {
+        cacheRegistros.push(item.val());
+    });
+
+    // si está logueado como gerente, renderizar siempre
+    if (rol === "gerente") {
+        pintarGerente();
+    }
 });
 
 /* ========= BORRAR GLOBAL ========= */
