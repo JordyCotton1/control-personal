@@ -90,7 +90,6 @@ button, input, textarea {
 
 <body>
 
-<!-- INICIO -->
 <div class="screen active" id="inicio">
     <div class="box">
         <h2>Ingresar como:</h2>
@@ -99,7 +98,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- PERSONAL -->
 <div class="screen" id="personalLogin">
     <div class="box">
         <input id="nombre" placeholder="Nombre">
@@ -108,7 +106,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- GERENTE -->
 <div class="screen" id="gerenteLogin">
     <div class="box">
         <input id="clave" type="password" placeholder="Clave">
@@ -116,7 +113,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="app">
     <div class="box">
         <h3 id="titulo"></h3>
@@ -143,19 +139,16 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- 🔥 TU SISTEMA ORIGINAL -->
 <script>
 let usuario = "";
 let rol = "";
 let intervalo;
 
-// CAMBIAR PANTALLA
 function mostrar(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 }
 
-// LOGIN PERSONAL
 function loginPersonal() {
     let n = nombre.value;
     let a = apellido.value;
@@ -166,7 +159,6 @@ function loginPersonal() {
     iniciar();
 }
 
-// LOGIN GERENTE
 function loginGerente() {
     if (clave.value !== "12345678") return alert("Clave incorrecta");
 
@@ -175,7 +167,6 @@ function loginGerente() {
     iniciar();
 }
 
-// INICIAR
 function iniciar() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     app.style.display = "block";
@@ -185,60 +176,22 @@ function iniciar() {
     if (rol === "gerente") {
         acciones.style.display = "none";
         btnBorrar.style.display = "block";
-        mostrarRegistros();
-        intervalo = setInterval(mostrarRegistros, 2000);
     } else {
         btnBorrar.style.display = "none";
-        mostrarSesion();
     }
 }
 
-// GUARDAR (LOCAL)
+/* 🔥 AHORA TODO ES FIREBASE (SIN LOCAL STORAGE CONFLICTO) */
 function guardar(texto) {
-    let hora = new Date().toLocaleTimeString();
-
-    let registros = JSON.parse(localStorage.getItem("registros")) || [];
-    registros.unshift({ usuario, texto, hora });
-    localStorage.setItem("registros", JSON.stringify(registros));
-
-    let sesion = JSON.parse(sessionStorage.getItem("sesion")) || [];
-    sesion.unshift({ texto, hora });
-    sessionStorage.setItem("sesion", JSON.stringify(sesion));
-}
-
-// MOSTRAR GERENTE
-function mostrarRegistros() {
-    let registros = JSON.parse(localStorage.getItem("registros")) || [];
-    registro.innerHTML = "";
-
-    registros.forEach(r => {
-        registro.innerHTML += `
-        <div class="item">
-            <span class="user">${r.usuario}</span><br>
-            ${r.texto}
-            <div class="time">${r.hora}</div>
-        </div>`;
+    push(cloudRef, {
+        usuario,
+        texto,
+        hora: new Date().toLocaleTimeString()
     });
 }
 
-// MOSTRAR PERSONAL
-function mostrarSesion() {
-    let sesion = JSON.parse(sessionStorage.getItem("sesion")) || [];
-    registro.innerHTML = "";
-
-    sesion.forEach(r => {
-        registro.innerHTML += `
-        <div class="item">
-            ${r.texto}
-            <div class="time">${r.hora}</div>
-        </div>`;
-    });
-}
-
-// ACCIONES
 function registrar(t) {
     guardar(t);
-    if (rol === "personal") mostrarSesion();
 }
 
 function enviarMensaje() {
@@ -247,27 +200,20 @@ function enviarMensaje() {
 
     guardar("💬 " + m);
     mensaje.value = "";
-
-    if (rol === "personal") mostrarSesion();
 }
 
-// BORRAR
 function borrarHistorial() {
-    if (!confirm("¿Seguro que quieres borrar todo el historial?")) return;
-
-    localStorage.removeItem("registros");
-    mostrarRegistros();
+    if (confirm("¿Borrar historial global?")) {
+        remove(cloudRef);
+    }
 }
 
-// CERRAR
 function cerrarSesion() {
-    clearInterval(intervalo);
-    if (rol === "personal") sessionStorage.clear();
     location.reload();
 }
 </script>
 
-<!-- 🔥 FIREBASE AGREGADO (SIN ROMPER TU CÓDIGO) -->
+<!-- 🔥 FIREBASE REAL CORREGIDO -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -292,56 +238,34 @@ const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
 const cloudRef = ref(db, "registros");
 
-/* 🔁 SINCRONIZAR CON TU SISTEMA */
-function sync(texto) {
-    push(cloudRef, {
-        user: window.usuario || "usuario",
-        text: texto,
-        time: new Date().toLocaleTimeString()
-    });
-}
+/* 🔁 GUARDAR GLOBAL */
+window.push = push;
+window.cloudRef = cloudRef;
+window.remove = remove;
 
-/* 🔥 INTERCEPTAR TU FUNCIÓN ORIGINAL */
-const check = setInterval(() => {
-    if (typeof guardar !== "undefined") {
-        clearInterval(check);
-
-        const oldGuardar = guardar;
-
-        guardar = function(texto) {
-            oldGuardar(texto);
-            sync(texto);
-        };
-    }
-}, 200);
-
-/* 👔 GERENTE VE TODO EN TIEMPO REAL */
+/* 👁️ VER EN TIEMPO REAL (TODOS DISPOSITIVOS) */
 onValue(cloudRef, (snap) => {
-    if (typeof rol === "undefined") return;
-    if (rol !== "gerente") return;
+
+    let data = [];
+
+    snap.forEach(item => {
+        data.push(item.val());
+    });
+
+    data.reverse();
 
     registro.innerHTML = "";
 
-    snap.forEach(item => {
-        let d = item.val();
-
-        registro.innerHTML = `
+    data.forEach(r => {
+        registro.innerHTML += `
         <div class="item">
-            <span class="user">${d.user}</span><br>
-            ${d.text}
-            <div class="time">${d.time}</div>
-        </div>` + registro.innerHTML;
+            <span class="user">${r.usuario}</span><br>
+            ${r.texto}
+            <div class="time">${r.hora}</div>
+        </div>`;
     });
 });
 
-/* 🗑️ BORRAR GLOBAL */
-window.borrarHistorial = function () {
-    if (confirm("¿Borrar historial global?")) {
-        remove(cloudRef);
-        localStorage.removeItem("registros");
-        mostrarRegistros();
-    }
-};
 </script>
 
 </body>
