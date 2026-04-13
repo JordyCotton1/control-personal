@@ -76,21 +76,13 @@ button, input, textarea {
     margin: 5px 0;
 }
 
-.user {
-    color: #38bdf8;
-    font-weight: bold;
-}
-
-.time {
-    font-size: 11px;
-    color: #94a3b8;
-}
+.user { color:#38bdf8; font-weight:bold; }
+.time { font-size:11px; color:#94a3b8; }
 </style>
 </head>
 
 <body>
 
-<!-- INICIO -->
 <div class="screen active" id="inicio">
     <div class="box">
         <h2>Ingresar como:</h2>
@@ -99,7 +91,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- PERSONAL -->
 <div class="screen" id="personalLogin">
     <div class="box">
         <input id="nombre" placeholder="Nombre">
@@ -108,7 +99,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- GERENTE -->
 <div class="screen" id="gerenteLogin">
     <div class="box">
         <input id="clave" type="password" placeholder="Clave">
@@ -116,7 +106,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="app">
     <div class="box">
         <h3 id="titulo"></h3>
@@ -129,12 +118,11 @@ button, input, textarea {
                 <button class="danger" onclick="registrar('🚪 Salida')">Salida</button>
             </div>
 
-            <textarea id="mensaje" placeholder="Ej: Voy al baño..."></textarea>
+            <textarea id="mensaje" placeholder="Mensaje"></textarea>
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
-        <!-- SOLO GERENTE VE TODO -->
-        <div class="log" id="registro" style="display:none;"></div>
+        <div class="log" id="registro"></div>
 
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
             🗑️ Borrar historial
@@ -147,7 +135,39 @@ button, input, textarea {
 <script>
 let usuario = "";
 let rol = "";
-let intervalo;
+
+function mostrar(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function loginPersonal(){
+    usuario = nombre.value + " " + apellido.value;
+    rol = "personal";
+    iniciar();
+}
+
+function loginGerente(){
+    if(clave.value !== "12345678") return alert("Clave incorrecta");
+    usuario = "Gerente";
+    rol = "gerente";
+    iniciar();
+}
+
+function iniciar(){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    app.style.display = "block";
+    titulo.innerText = "👤 " + usuario;
+
+    if(rol === "gerente"){
+        acciones.style.display = "none";
+        btnBorrar.style.display = "block";
+    } else {
+        btnBorrar.style.display = "none";
+    }
+}
+
+/* ================= FIREBASE ================= */
 </script>
 
 <script type="module">
@@ -172,105 +192,63 @@ const firebaseConfig = {
 
 const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
-const cloudRef = ref(db, "registros");
+const refDB = ref(db, "registros");
 
-/* ================= LOGIN ================= */
-window.mostrar = function(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
-
-window.loginPersonal = function() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
-
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-window.loginGerente = function() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
-
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block";
-        registro.style.display = "block";
-    } else {
-        registro.style.display = "none";
-        btnBorrar.style.display = "none";
-    }
-}
-
-/* ================= GUARDAR ================= */
-window.guardar = function(texto) {
-    push(cloudRef, {
-        usuario,
+/* guardar */
+window.guardar = function(texto){
+    push(refDB, {
+        usuario: window.usuario,
         texto,
-        hora: new Date().toLocaleTimeString()
+        ts: Date.now()
     });
 };
 
-window.registrar = function(t) {
+window.registrar = function(t){
     guardar(t);
 };
 
-window.enviarMensaje = function() {
+window.enviarMensaje = function(){
     let m = mensaje.value;
-    if (!m) return alert("Escribe algo");
-
+    if(!m) return alert("Escribe algo");
     guardar("💬 " + m);
     mensaje.value = "";
 };
 
-/* ================= GERENTE VE TODO ================= */
-onValue(cloudRef, (snap) => {
-    if (rol !== "gerente") return;
+window.borrarHistorial = function(){
+    if(confirm("¿Borrar todo?")){
+        remove(refDB);
+    }
+};
+
+/* 🔥 REGLA DE VISUALIZACIÓN */
+onValue(refDB,(snap)=>{
 
     let data = [];
 
-    snap.forEach(item => {
-        data.push(item.val());
+    snap.forEach(i=>{
+        data.push(i.val());
     });
 
-    // 🔥 NUEVO ARRIBA
-    data.reverse();
+    // 🔥 ORDEN: MÁS NUEVO PRIMERO
+    data.sort((a,b)=>b.ts - a.ts);
 
     registro.innerHTML = "";
 
-    data.forEach(r => {
+    data.forEach(r=>{
+
+        // 👇 PERSONAL SOLO VE LO SUYO
+        if(rol === "personal" && r.usuario !== usuario) return;
+
         registro.innerHTML += `
         <div class="item">
             <span class="user">${r.usuario}</span><br>
             ${r.texto}
-            <div class="time">${r.hora}</div>
+            <div class="time">
+                ${new Date(r.ts).toLocaleTimeString()}
+            </div>
         </div>`;
     });
 });
-
-/* ================= BORRAR ================= */
-window.borrarHistorial = function() {
-    if (confirm("¿Borrar historial global?")) {
-        remove(cloudRef);
-    }
-};
-
-/* ================= CERRAR ================= */
-window.cerrarSesion = function() {
-    location.reload();
-};
 </script>
 
 </body>
