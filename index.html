@@ -6,91 +6,82 @@
 
 <style>
 :root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --accent: #3b82f6;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --text: #e2e8f0;
+    --bg:#0f172a;
+    --card:#1e293b;
+    --accent:#3b82f6;
+    --success:#22c55e;
+    --danger:#ef4444;
+    --text:#e2e8f0;
 }
 
-body {
-    margin: 0;
-    font-family: Arial;
-    background: var(--bg);
-    color: var(--text);
+body{
+    margin:0;
+    font-family:Arial;
+    background:var(--bg);
+    color:var(--text);
 }
 
-.screen {
-    display: none;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-.active { display: flex; }
+.screen{display:none;justify-content:center;align-items:center;height:100vh;}
+.active{display:flex;}
 
-.box {
-    background: var(--card);
-    padding: 25px;
-    border-radius: 15px;
-    width: 300px;
-    text-align: center;
+.box{
+    background:var(--card);
+    padding:25px;
+    border-radius:15px;
+    width:300px;
+    text-align:center;
 }
 
-button, input, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 6px 0;
-    border-radius: 8px;
-    border: none;
+button,input,textarea{
+    width:100%;
+    padding:10px;
+    margin:6px 0;
+    border-radius:8px;
+    border:none;
 }
 
-.primary { background: var(--accent); color:white; }
-.success { background: var(--success); color:white; }
-.warning { background: var(--warning); color:white; }
-.danger { background: var(--danger); color:white; }
+.primary{background:var(--accent);color:white;}
+.success{background:var(--success);color:white;}
+.danger{background:var(--danger);color:white;}
 
-.app {
-    display: none;
-    max-width: 420px;
-    margin: 30px auto;
+.app{
+    display:none;
+    max-width:420px;
+    margin:30px auto;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
 }
 
-.log {
-    margin-top: 15px;
-    max-height: 300px;
-    overflow-y: auto;
+.log{
+    margin-top:15px;
+    max-height:300px;
+    overflow-y:auto;
 }
 
-.item {
-    background: #0f172a;
-    padding: 10px;
-    border-radius: 10px;
-    margin: 5px 0;
+.item{
+    background:#0f172a;
+    padding:10px;
+    border-radius:10px;
+    margin:5px 0;
 }
 
-.user {
-    color: #38bdf8;
-    font-weight: bold;
-}
+.user{color:#38bdf8;font-weight:bold;}
+.time{font-size:11px;color:#94a3b8;}
 
-.time {
-    font-size: 11px;
-    color: #94a3b8;
+.ok{
+    margin-top:10px;
+    color:#22c55e;
+    font-size:13px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- INICIO -->
 <div class="screen active" id="inicio">
     <div class="box">
         <h2>Ingresar como:</h2>
@@ -99,7 +90,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- PERSONAL -->
 <div class="screen" id="personalLogin">
     <div class="box">
         <input id="nombre" placeholder="Nombre">
@@ -108,7 +98,6 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- GERENTE -->
 <div class="screen" id="gerenteLogin">
     <div class="box">
         <input id="clave" type="password" placeholder="Clave">
@@ -116,25 +105,24 @@ button, input, textarea {
     </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="app">
     <div class="box">
         <h3 id="titulo"></h3>
 
         <div id="acciones">
             <div class="grid">
-                <button class="warning" onclick="registrar('🍳 Desayuno')">Desayuno</button>
+                <button class="primary" onclick="registrar('🍳 Desayuno')">Desayuno</button>
                 <button class="success" onclick="registrar('🥪 Refacción')">Refacción</button>
-                <button class="primary" onclick="registrar('🍽️ Almuerzo')">Almuerzo</button>
                 <button class="danger" onclick="registrar('🚪 Salida')">Salida</button>
             </div>
 
-            <textarea id="mensaje" placeholder="Ej: Voy al baño..."></textarea>
+            <textarea id="mensaje" placeholder="Mensaje"></textarea>
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
+
+            <div class="ok" id="estado"></div>
         </div>
 
-        <!-- SOLO GERENTE VE TODO -->
-        <div class="log" id="registro" style="display:none;"></div>
+        <div class="log" id="registro"></div>
 
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
             🗑️ Borrar historial
@@ -145,9 +133,8 @@ button, input, textarea {
 </div>
 
 <script>
-let usuario = "";
-let rol = "";
-let intervalo;
+let usuario="";
+let rol="";
 </script>
 
 <script type="module">
@@ -161,116 +148,119 @@ remove
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAJwm2hMDS5H5imRjlg_LDhK1MkZjKfX_M",
+  apiKey: "AIzaSyAJwm2hMDS5H5imRjlg_LDhK1MkZjKX_F",
   authDomain: "cafeteria-app1.firebaseapp.com",
   databaseURL: "https://cafeteria-app1-default-rtdb.firebaseio.com",
   projectId: "cafeteria-app1",
-  storageBucket: "cafeteria-app1.firebasestorage.app",
-  messagingSenderId: "350426514665",
-  appId: "1:350426514665:web:79a545b0ebc4a9329e9c78"
 };
 
 const appFB = initializeApp(firebaseConfig);
 const db = getDatabase(appFB);
-const cloudRef = ref(db, "registros");
+const refDB = ref(db,"registros");
 
-/* ================= LOGIN ================= */
-window.mostrar = function(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-}
+function guardar(texto){
+    push(refDB,{
+        usuario: window.usuario,
+        texto,
+        ts: Date.now()
+    });
 
-window.loginPersonal = function() {
-    let n = nombre.value;
-    let a = apellido.value;
-    if (!n || !a) return alert("Completa datos");
-
-    usuario = n + " " + a;
-    rol = "personal";
-    iniciar();
-}
-
-window.loginGerente = function() {
-    if (clave.value !== "12345678") return alert("Clave incorrecta");
-
-    usuario = "Gerente";
-    rol = "gerente";
-    iniciar();
-}
-
-function iniciar() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    app.style.display = "block";
-
-    titulo.innerText = "👤 " + usuario;
-
-    if (rol === "gerente") {
-        acciones.style.display = "none";
-        btnBorrar.style.display = "block";
-        registro.style.display = "block";
-    } else {
-        registro.style.display = "none";
-        btnBorrar.style.display = "none";
+    // 👇 aviso de enviado
+    if(window.rol === "personal"){
+        document.getElementById("estado").innerText = "✔ Enviado correctamente";
+        setTimeout(()=>{
+            document.getElementById("estado").innerText = "";
+        },2000);
     }
 }
 
-/* ================= GUARDAR ================= */
-window.guardar = function(texto) {
-    push(cloudRef, {
-        usuario,
-        texto,
-        hora: new Date().toLocaleTimeString()
-    });
-};
+function render(data){
+    data.sort((a,b)=>b.ts-a.ts);
 
-window.registrar = function(t) {
-    guardar(t);
-};
+    let html="";
 
-window.enviarMensaje = function() {
-    let m = mensaje.value;
-    if (!m) return alert("Escribe algo");
+    data.forEach(r=>{
 
-    guardar("💬 " + m);
-    mensaje.value = "";
-};
+        // 🔥 FILTRO IMPORTANTE
+        if(window.rol === "personal"){
+            if(r.usuario !== window.usuario) return;
+        }
 
-/* ================= GERENTE VE TODO ================= */
-onValue(cloudRef, (snap) => {
-    if (rol !== "gerente") return;
-
-    let data = [];
-
-    snap.forEach(item => {
-        data.push(item.val());
-    });
-
-    // 🔥 NUEVO ARRIBA
-    data.reverse();
-
-    registro.innerHTML = "";
-
-    data.forEach(r => {
-        registro.innerHTML += `
+        html += `
         <div class="item">
             <span class="user">${r.usuario}</span><br>
             ${r.texto}
-            <div class="time">${r.hora}</div>
+            <div class="time">${new Date(r.ts).toLocaleTimeString()}</div>
         </div>`;
     });
+
+    registro.innerHTML = html;
+}
+
+onValue(refDB,(snap)=>{
+    let data=[];
+    snap.forEach(i=>data.push(i.val()));
+    render(data);
 });
 
-/* ================= BORRAR ================= */
-window.borrarHistorial = function() {
-    if (confirm("¿Borrar historial global?")) {
-        remove(cloudRef);
-    }
+/* EXPORTAR FUNCIONES */
+window.guardar = guardar;
+
+window.registrar = function(t){
+    guardar(t);
 };
 
-/* ================= CERRAR ================= */
-window.cerrarSesion = function() {
-    location.reload();
+window.enviarMensaje = function(){
+    let m = mensaje.value;
+    if(!m) return alert("Escribe algo");
+
+    guardar("💬 "+m);
+    mensaje.value="";
 };
+
+window.borrarHistorial = function(){
+    if(confirm("¿Borrar todo?")){
+        remove(refDB);
+    }
+};
+</script>
+
+<script>
+function mostrar(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+function loginPersonal(){
+    usuario = nombre.value+" "+apellido.value;
+    rol="personal";
+    iniciar();
+}
+
+function loginGerente(){
+    if(clave.value!=="12345678") return alert("Clave incorrecta");
+    usuario="Gerente";
+    rol="gerente";
+    iniciar();
+}
+
+function iniciar(){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    app.style.display="block";
+
+    titulo.innerText="👤 "+usuario;
+
+    if(rol==="gerente"){
+        acciones.style.display="none";
+        btnBorrar.style.display="block";
+    } else {
+        btnBorrar.style.display="none";
+    }
+}
+
+function cerrarSesion(){
+    location.reload();
+}
 </script>
 
 </body>
