@@ -22,6 +22,7 @@ body {
     color: var(--text);
 }
 
+/* ===== PANTALLAS ===== */
 .screen {
     display: none;
     justify-content: center;
@@ -30,6 +31,7 @@ body {
 }
 .active { display: flex; }
 
+/* ===== CAJA PRINCIPAL ===== */
 .box {
     background: var(--card);
     padding: 25px;
@@ -38,6 +40,7 @@ body {
     text-align: center;
 }
 
+/* ===== BOTONES ===== */
 button, input, textarea {
     width: 100%;
     padding: 10px;
@@ -46,17 +49,20 @@ button, input, textarea {
     border: none;
 }
 
+/* ===== COLORES ===== */
 .primary { background: var(--accent); color:white; }
 .success { background: var(--success); color:white; }
 .warning { background: var(--warning); color:white; }
 .danger { background: var(--danger); color:white; }
 
+/* ===== APP ===== */
 .app {
     display: none;
     max-width: 420px;
     margin: 30px auto;
 }
 
+/* GRID DEFAULT */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -84,6 +90,49 @@ button, input, textarea {
 .time {
     font-size: 11px;
     color: #94a3b8;
+}
+
+/* =========================
+   📱 MOBILE
+========================= */
+body.mobile .box {
+    width: 92%;
+    padding: 18px;
+}
+
+body.mobile .app {
+    max-width: 95%;
+    margin: 10px auto;
+}
+
+body.mobile .grid {
+    grid-template-columns: 1fr; /* botones en columna */
+}
+
+/* =========================
+   📲 TABLET
+========================= */
+body.tablet .box {
+    width: 70%;
+}
+
+body.tablet .app {
+    max-width: 600px;
+}
+
+body.tablet .grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+/* =========================
+   💻 DESKTOP
+========================= */
+body.desktop .box {
+    width: 300px;
+}
+
+body.desktop .app {
+    max-width: 420px;
 }
 </style>
 </head>
