@@ -2,10 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-
-<!-- IMPORTANTE PARA MÓVILES -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Control de Personal</title>
 
 <style>
@@ -26,7 +22,6 @@ body {
     color: var(--text);
 }
 
-/* ===== PANTALLAS ===== */
 .screen {
     display: none;
     justify-content: center;
@@ -35,7 +30,6 @@ body {
 }
 .active { display: flex; }
 
-/* ===== CAJA PRINCIPAL ===== */
 .box {
     background: var(--card);
     padding: 25px;
@@ -44,7 +38,6 @@ body {
     text-align: center;
 }
 
-/* ===== BOTONES ===== */
 button, input, textarea {
     width: 100%;
     padding: 10px;
@@ -53,20 +46,17 @@ button, input, textarea {
     border: none;
 }
 
-/* ===== COLORES ===== */
 .primary { background: var(--accent); color:white; }
 .success { background: var(--success); color:white; }
 .warning { background: var(--warning); color:white; }
 .danger { background: var(--danger); color:white; }
 
-/* ===== APP ===== */
 .app {
     display: none;
     max-width: 420px;
     margin: 30px auto;
 }
 
-/* GRID DEFAULT */
 .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -94,49 +84,6 @@ button, input, textarea {
 .time {
     font-size: 11px;
     color: #94a3b8;
-}
-
-/* =========================
-   📱 MOBILE
-========================= */
-body.mobile .box {
-    width: 92%;
-    padding: 18px;
-}
-
-body.mobile .app {
-    max-width: 95%;
-    margin: 10px auto;
-}
-
-body.mobile .grid {
-    grid-template-columns: 1fr; /* botones en columna */
-}
-
-/* =========================
-   📲 TABLET
-========================= */
-body.tablet .box {
-    width: 70%;
-}
-
-body.tablet .app {
-    max-width: 600px;
-}
-
-body.tablet .grid {
-    grid-template-columns: 1fr 1fr;
-}
-
-/* =========================
-   💻 DESKTOP
-========================= */
-body.desktop .box {
-    width: 300px;
-}
-
-body.desktop .app {
-    max-width: 420px;
 }
 </style>
 </head>
@@ -186,6 +133,7 @@ body.desktop .app {
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
+        <!-- SOLO GERENTE VE TODO -->
         <div class="log" id="registro" style="display:none;"></div>
         <div class="log" id="registroPersonal"></div>
 
@@ -200,24 +148,6 @@ body.desktop .app {
 <script>
 let usuario = "";
 let rol = "";
-
-/* ========= DETECTAR DISPOSITIVO ========= */
-function detectarDispositivo() {
-    const w = window.innerWidth;
-
-    document.body.classList.remove("mobile", "tablet", "desktop");
-
-    if (w <= 600) {
-        document.body.classList.add("mobile");
-    } else if (w <= 1024) {
-        document.body.classList.add("tablet");
-    } else {
-        document.body.classList.add("desktop");
-    }
-}
-
-window.addEventListener("resize", detectarDispositivo);
-window.addEventListener("load", detectarDispositivo);
 
 /* ========= LOGIN ========= */
 function mostrar(id) {
@@ -242,8 +172,7 @@ function loginGerente() {
     rol = "gerente";
     iniciar();
 }
-
-function mostrarPersonal(texto) {
+    function mostrarPersonal(texto) {
     let cont = document.getElementById("registroPersonal");
 
     let html = `
@@ -271,11 +200,96 @@ function iniciar() {
         btnBorrar.style.display = "none";
     }
 }
+
+/* ========= FIREBASE ========= */
 </script>
 
-<!-- Firebase igual que el tuyo -->
 <script type="module">
-/* (TU FIREBASE SIN CAMBIOS) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+getDatabase,
+ref,
+push,
+onValue,
+remove
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJwm2hMDS5H5imRjlg_LDhK1MkZjKfX_M",
+  authDomain: "cafeteria-app1.firebaseapp.com",
+  databaseURL: "https://cafeteria-app1-default-rtdb.firebaseio.com",
+  projectId: "cafeteria-app1",
+  storageBucket: "cafeteria-app1.firebasestorage.app",
+  messagingSenderId: "350426514665",
+  appId: "1:350426514665:web:79a545b0ebc4a9329e9c78"
+};
+
+const appFB = initializeApp(firebaseConfig);
+const db = getDatabase(appFB);
+const cloudRef = ref(db, "registros");
+
+/* ========= GUARDAR GLOBAL ========= */
+window.guardar = function(texto) {
+    push(cloudRef, {
+        usuario,
+        texto,
+        hora: new Date().toLocaleTimeString()
+    });
+};
+
+window.registrar = function(t) {
+    guardar(t);
+
+    // 👇 PERSONAL VE SOLO LO SUYO
+    if (rol === "personal") {
+        mostrarPersonal(t);
+    }
+};
+
+window.enviarMensaje = function() {
+    let m = mensaje.value;
+    if (!m) return alert("Escribe algo");
+
+    guardar("💬 " + m);
+    mensaje.value = "";
+};
+
+/* ========= GERENTE VE TODO (NUEVO ARRIBA) ========= */
+onValue(cloudRef, (snap) => {
+    if (rol !== "gerente") return;
+
+    let data = [];
+
+    snap.forEach(item => {
+        data.push(item.val());
+    });
+
+    // 🔥 más nuevo primero
+    data.reverse();
+
+    registro.innerHTML = "";
+
+    data.forEach(r => {
+        registro.innerHTML += `
+        <div class="item">
+            <span class="user">${r.usuario}</span><br>
+            ${r.texto}
+            <div class="time">${r.hora}</div>
+        </div>`;
+    });
+});
+
+/* ========= BORRAR GLOBAL ========= */
+window.borrarHistorial = function() {
+    if (confirm("¿Borrar historial global?")) {
+        remove(cloudRef);
+    }
+};
+
+/* ========= CERRAR ========= */
+window.cerrarSesion = function() {
+    location.reload();
+};
 </script>
 
 </body>
