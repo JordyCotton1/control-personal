@@ -121,7 +121,6 @@ button, input, textarea {
     <div class="box">
         <h3 id="titulo"></h3>
 
-        <!-- PERSONAL -->
         <div id="acciones">
             <div class="grid">
                 <button class="warning" onclick="registrar('🍳 Desayuno')">Desayuno</button>
@@ -134,10 +133,8 @@ button, input, textarea {
             <button class="primary" onclick="enviarMensaje()">Enviar aviso</button>
         </div>
 
-        <!-- HISTORIAL -->
         <div class="log" id="registro"></div>
 
-        <!-- BOTÓN BORRAR SOLO GERENTE -->
         <button id="btnBorrar" class="danger" onclick="borrarHistorial()" style="display:none;">
             🗑️ Borrar historial
         </button>
@@ -146,6 +143,7 @@ button, input, textarea {
     </div>
 </div>
 
+<!-- 🔥 TU SISTEMA ORIGINAL -->
 <script>
 let usuario = "";
 let rol = "";
@@ -186,7 +184,7 @@ function iniciar() {
 
     if (rol === "gerente") {
         acciones.style.display = "none";
-        btnBorrar.style.display = "block"; // 👈 mostrar botón
+        btnBorrar.style.display = "block";
         mostrarRegistros();
         intervalo = setInterval(mostrarRegistros, 2000);
     } else {
@@ -195,7 +193,7 @@ function iniciar() {
     }
 }
 
-// GUARDAR
+// GUARDAR (LOCAL)
 function guardar(texto) {
     let hora = new Date().toLocaleTimeString();
 
@@ -253,7 +251,7 @@ function enviarMensaje() {
     if (rol === "personal") mostrarSesion();
 }
 
-// 🗑️ BORRAR HISTORIAL
+// BORRAR
 function borrarHistorial() {
     if (!confirm("¿Seguro que quieres borrar todo el historial?")) return;
 
@@ -261,16 +259,89 @@ function borrarHistorial() {
     mostrarRegistros();
 }
 
-// CERRAR SESIÓN
+// CERRAR
 function cerrarSesion() {
     clearInterval(intervalo);
-
-    if (rol === "personal") {
-        sessionStorage.clear();
-    }
-
+    if (rol === "personal") sessionStorage.clear();
     location.reload();
 }
+</script>
+
+<!-- 🔥 FIREBASE AGREGADO (SIN ROMPER TU CÓDIGO) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+getDatabase,
+ref,
+push,
+onValue,
+remove
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJwm2hMDS5H5imRjlg_LDhK1MkZjKfX_M",
+  authDomain: "cafeteria-app1.firebaseapp.com",
+  databaseURL: "https://cafeteria-app1-default-rtdb.firebaseio.com",
+  projectId: "cafeteria-app1",
+  storageBucket: "cafeteria-app1.firebasestorage.app",
+  messagingSenderId: "350426514665",
+  appId: "1:350426514665:web:79a545b0ebc4a9329e9c78"
+};
+
+const appFB = initializeApp(firebaseConfig);
+const db = getDatabase(appFB);
+const cloudRef = ref(db, "registros");
+
+/* 🔁 SINCRONIZAR CON TU SISTEMA */
+function sync(texto) {
+    push(cloudRef, {
+        user: window.usuario || "usuario",
+        text: texto,
+        time: new Date().toLocaleTimeString()
+    });
+}
+
+/* 🔥 INTERCEPTAR TU FUNCIÓN ORIGINAL */
+const check = setInterval(() => {
+    if (typeof guardar !== "undefined") {
+        clearInterval(check);
+
+        const oldGuardar = guardar;
+
+        guardar = function(texto) {
+            oldGuardar(texto);
+            sync(texto);
+        };
+    }
+}, 200);
+
+/* 👔 GERENTE VE TODO EN TIEMPO REAL */
+onValue(cloudRef, (snap) => {
+    if (typeof rol === "undefined") return;
+    if (rol !== "gerente") return;
+
+    registro.innerHTML = "";
+
+    snap.forEach(item => {
+        let d = item.val();
+
+        registro.innerHTML = `
+        <div class="item">
+            <span class="user">${d.user}</span><br>
+            ${d.text}
+            <div class="time">${d.time}</div>
+        </div>` + registro.innerHTML;
+    });
+});
+
+/* 🗑️ BORRAR GLOBAL */
+window.borrarHistorial = function () {
+    if (confirm("¿Borrar historial global?")) {
+        remove(cloudRef);
+        localStorage.removeItem("registros");
+        mostrarRegistros();
+    }
+};
 </script>
 
 </body>
